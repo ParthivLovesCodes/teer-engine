@@ -48,7 +48,7 @@ function App() {
 
   const fetchRecentHistory = async () => {
     try {
-      const res = await axios.get('https://aubrie-illustrative-nondigestibly.ngrok-free.dev/api/history/Shillong?limit=10')
+      const res = await axios.get('https://teer-api-7erf.onrender.com/api/history/Shillong?limit=10')
       setRecentHistory(res.data)
     } catch (error) {
       console.error("Could not fetch recent history", error)
@@ -59,7 +59,7 @@ function App() {
     setIsHistoryLoading(true)
     try {
       // Fetch Results
-      const res = await axios.get('https://aubrie-illustrative-nondigestibly.ngrok-free.dev/api/history/Shillong?limit=5000')
+      const res = await axios.get('https://teer-api-7erf.onrender.com/api/history/Shillong?limit=5000')
       const grouped = res.data.reduce((acc, curr) => {
         const monthYear = new Date(curr.result_date).toLocaleString('default', { month: 'long', year: 'numeric' })
         if (!acc[monthYear]) acc[monthYear] = []
@@ -69,7 +69,7 @@ function App() {
       setFullHistory(grouped)
 
       // Fetch Predictions to highlight the hits
-      const predRes = await axios.get('https://aubrie-illustrative-nondigestibly.ngrok-free.dev/api/predictions/Shillong')
+      const predRes = await axios.get('https://teer-api-7erf.onrender.com/api/predictions/Shillong')
       setSavedPredictions(predRes.data)
       
     } catch (error) {
@@ -80,7 +80,7 @@ function App() {
 
   const fetchAnalytics = async () => {
     try {
-      const res = await axios.get('https://aubrie-illustrative-nondigestibly.ngrok-free.dev/api/analytics/Shillong')
+      const res = await axios.get('https://teer-api-7erf.onrender.com/api/analytics/Shillong')
       setAnalyticsData(res.data)
     } catch (error) {
       console.error("Could not fetch analytics", error)
@@ -110,7 +110,7 @@ function App() {
   const handleSubmit = async (e) => {
     e.preventDefault()
     try {
-      await axios.post('https://aubrie-illustrative-nondigestibly.ngrok-free.dev/api/results', { city: 'Shillong', result_date: date, fr: parseInt(fr), sr: parseInt(sr) })
+      await axios.post('https://teer-api-7erf.onrender.com/api/results', { city: 'Shillong', result_date: date, fr: parseInt(fr), sr: parseInt(sr) })
       setMessage({ text: '✅ Result saved successfully!', type: 'success' })
       setFr(''); setSr('');
       fetchRecentHistory()
@@ -129,7 +129,7 @@ function App() {
   const handleDelete = async (id) => {
     if (!window.confirm("Delete this result?")) return
     try {
-      await axios.delete(`https://aubrie-illustrative-nondigestibly.ngrok-free.dev/api/results/${id}`)
+      await axios.delete(`https://teer-api-7erf.onrender.com/api/results/${id}`)
       fetchRecentHistory()
       
       if (activeTab === 'history') fetchFullHistory()
@@ -146,7 +146,7 @@ function App() {
 
   const runPrediction = async () => {
     try {
-      const res = await axios.get('https://aubrie-illustrative-nondigestibly.ngrok-free.dev/api/predict/Shillong')
+      const res = await axios.get('https://teer-api-7erf.onrender.com/api/predict/Shillong')
       setPrediction(res.data)
       localStorage.setItem('teerPrediction', JSON.stringify(res.data))
       
@@ -174,7 +174,7 @@ function App() {
     ];
 
     try {
-      await axios.post('https://aubrie-illustrative-nondigestibly.ngrok-free.dev/api/predictions', {
+      await axios.post('https://teer-api-7erf.onrender.com/api/predictions', {
         city: 'Shillong',
         target_date: targetDate,
         numbers: allTargets.join(',')
