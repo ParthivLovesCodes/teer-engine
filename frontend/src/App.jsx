@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react'
 import axios from 'axios'
 import './App.css'
+
 axios.defaults.headers.common['ngrok-skip-browser-warning'] = '69420';
+
 // Import your components
 import Login from './components/Login'
 import Header from './components/Header'
@@ -10,6 +12,7 @@ import Dashboard from './components/Dashboard'
 import HistoryBook from './components/HistoryBook'
 import Analytics from './components/Analytics'
 import PredictionArchive from './components/PredictionArchive'
+
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(() => localStorage.getItem('isTeerAdmin') === 'true')
   const [pin, setPin] = useState('')
@@ -37,7 +40,7 @@ function App() {
   const [showAllMonths, setShowAllMonths] = useState(false)
   const [analyticsData, setAnalyticsData] = useState(null)
   
-  // NEW: State for storing the archived predictions for the History Book highlights
+  // State for storing the archived predictions for the History Book highlights
   const [savedPredictions, setSavedPredictions] = useState({})
 
   // Theme Effect
@@ -113,9 +116,10 @@ function App() {
       await axios.post('https://teer-api-7erf.onrender.com/api/results', { city: 'Shillong', result_date: date, fr: parseInt(fr), sr: parseInt(sr) })
       setMessage({ text: '✅ Result saved successfully!', type: 'success' })
       setFr(''); setSr('');
-      fetchRecentHistory()
       
-      if (activeTab === 'history') fetchFullHistory()
+      // Update data immediately
+      fetchRecentHistory()
+      fetchFullHistory()
       
       setPrediction(null)
       localStorage.removeItem('teerPrediction')
@@ -130,9 +134,10 @@ function App() {
     if (!window.confirm("Delete this result?")) return
     try {
       await axios.delete(`https://teer-api-7erf.onrender.com/api/results/${id}`)
-      fetchRecentHistory()
       
-      if (activeTab === 'history') fetchFullHistory()
+      // Update data immediately
+      fetchRecentHistory()
+      fetchFullHistory()
       
       setMessage({ text: '🗑️ Result deleted.', type: 'success' })
       setPrediction(null)
@@ -162,7 +167,6 @@ function App() {
     setTimeout(() => setMessage({ text: '', type: '' }), 3000)
   }
 
-  // NEW: Saves the generated targets to the database
   const handleSavePrediction = async (e) => {
     e.preventDefault();
     if (!prediction || !targetDate) return;
@@ -181,8 +185,8 @@ function App() {
       });
       setMessage({ text: '💾 Prediction Archived for Hit Tracking!', type: 'success' });
       
-      // Refresh history to ensure the new saved prediction is loaded
-      if (activeTab === 'history') fetchFullHistory(); 
+      // Refresh history immediately so the Archives tab updates
+      fetchFullHistory(); 
     } catch (error) {
       setMessage({ text: '❌ Error saving prediction', type: 'error' });
     }
@@ -207,16 +211,12 @@ function App() {
             date={date} setDate={setDate} fr={fr} setFr={setFr} sr={sr} setSr={setSr}
             handleSubmit={handleSubmit} recentHistory={recentHistory} handleDelete={handleDelete}
             prediction={prediction} runPrediction={runPrediction}
-            
-            // Passed the new props down to the Dashboard
             targetDate={targetDate} setTargetDate={setTargetDate} handleSavePrediction={handleSavePrediction}
           />
         ) : activeTab === 'history' ? (
           <HistoryBook 
             fullHistory={fullHistory} isHistoryLoading={isHistoryLoading} 
             showAllMonths={showAllMonths} setShowAllMonths={setShowAllMonths} handleDelete={handleDelete}
-            
-            // Passed the saved predictions down to the History Book
             savedPredictions={savedPredictions}
           />
         ) : activeTab === 'analytics' ? (
