@@ -4,11 +4,13 @@ export default function Dashboard({
   date, setDate, fr, setFr, sr, setSr, 
   handleSubmit, recentHistory, handleDelete, 
   prediction, runPrediction, 
-  targetDate, setTargetDate, handleSavePrediction 
+  targetDate, setTargetDate, handleSavePrediction,
+  credits // NEW: Added credits prop
 }) {
   
   const cardStyle = { backgroundColor: 'var(--card-bg)', padding: '1.5rem', borderRadius: '12px', border: '1px solid var(--border-color)' }
   const inputStyle = { width: '100%', padding: '0.875rem', borderRadius: '6px', backgroundColor: 'var(--input-bg)', border: '1px solid var(--border-color)', color: 'var(--text-main)', outline: 'none' }
+  
   const handleWhatsAppShare = () => {
     if (!prediction || !targetDate) {
       alert("Please generate a prediction and set a target date first!");
@@ -26,6 +28,7 @@ export default function Dashboard({
     const whatsappUrl = `https://wa.me/919707551889?text=${encodeURIComponent(message)}`;
     window.open(whatsappUrl, '_blank');
   };
+
   return (
     <div className="dashboard-grid">
       <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
@@ -82,31 +85,60 @@ export default function Dashboard({
 
       {/* PREDICTION ENGINE */}
       <div style={cardStyle}>
+        
+        {/* NEW: Credit Display */}
+        <div style={{ marginBottom: '1.5rem', padding: '1rem', backgroundColor: 'var(--bg-main)', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
+          <div style={{ fontWeight: 'bold', fontSize: '1.1rem', color: credits >= 30 ? 'var(--text-main)' : '#ef4444' }}>
+            💳 Credits Remaining: {credits} / 1000
+          </div>
+          <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)', display: 'block', marginTop: '0.25rem' }}>
+            Cost per run: 30 credits
+          </span>
+        </div>
+
         <div className="header-layout" style={{ marginBottom: '2rem' }}>
           <h2 style={{ display: 'flex', alignItems: 'center', gap: '10px', margin: 0, color: 'var(--text-main)' }}>
             <Shield size={24} color="#8b5cf6"/> Protocol Engine
           </h2>
-          <button onClick={runPrediction} style={{ padding: '0.875rem', width: '100%', maxWidth: '200px', backgroundColor: '#8b5cf6', color: 'white', border: 'none', borderRadius: '6px', fontWeight: 'bold', cursor: 'pointer', boxShadow: '0 4px 6px -1px rgba(139, 92, 246, 0.3)' }}>
-            Run Targets
-          </button>
+          
+          {/* UPDATED: Run Button with Credit Check */}
           <button 
-                onClick={handleWhatsAppShare}
-                style={{
-                  backgroundColor: '#25D366', // WhatsApp Green
-                  color: 'white',
-                  border: 'none',
-                  padding: '0.5rem 1rem',
-                  borderRadius: '8px',
-                  cursor: 'pointer',
-                  fontWeight: 'bold',
-                  marginLeft: '10px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '5px'
-                }}
-              >
-                📱 Share to WhatsApp
-            </button>
+            onClick={runPrediction} 
+            disabled={credits < 30}
+            style={{ 
+              padding: '0.875rem', 
+              width: '100%', 
+              maxWidth: '200px', 
+              backgroundColor: credits >= 30 ? '#8b5cf6' : '#888', 
+              color: 'white', 
+              border: 'none', 
+              borderRadius: '6px', 
+              fontWeight: 'bold', 
+              cursor: credits >= 30 ? 'pointer' : 'not-allowed', 
+              boxShadow: credits >= 30 ? '0 4px 6px -1px rgba(139, 92, 246, 0.3)' : 'none' 
+            }}
+          >
+            {credits >= 30 ? 'Run Targets' : 'Credits Exhausted'}
+          </button>
+          
+          <button 
+            onClick={handleWhatsAppShare}
+            style={{
+              backgroundColor: '#25D366',
+              color: 'white',
+              border: 'none',
+              padding: '0.5rem 1rem',
+              borderRadius: '8px',
+              cursor: 'pointer',
+              fontWeight: 'bold',
+              marginLeft: '10px',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '5px'
+            }}
+          >
+            📱 Share to WhatsApp
+          </button>
         </div>
         {prediction ? (
           <div>

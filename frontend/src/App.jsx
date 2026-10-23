@@ -28,11 +28,18 @@ function App() {
   const [sr, setSr] = useState('')
   const [message, setMessage] = useState({ text: '', type: '' })
   
-  // Data States
+  // Data & Credit States
   const [prediction, setPrediction] = useState(() => {
     const saved = localStorage.getItem('teerPrediction')
     return saved ? JSON.parse(saved) : null
   })
+  
+  // NEW: Credit Tracker State
+  const [credits, setCredits] = useState(() => {
+    const saved = localStorage.getItem('teerCredits')
+    return saved !== null ? parseInt(saved) : 1000
+  })
+
   const [targetDate, setTargetDate] = useState('')
   const [recentHistory, setRecentHistory] = useState([])
   const [fullHistory, setFullHistory] = useState({})
@@ -149,18 +156,32 @@ function App() {
     setTimeout(() => setMessage({ text: '', type: '' }), 3000)
   }
 
+  // UPDATED: runPrediction now handles the 30-credit deduction
   const runPrediction = async () => {
+    const COST_PER_RUN = 30; // Deduct 30 credits per click
+
+    // Check if they have enough credits for a run
+    if (credits < COST_PER_RUN) {
+      setMessage({ text: '❌ Out of credits! Please contact admin to renew.', type: 'error' })
+      return
+    }
+
     try {
       const res = await axios.get('https://teer-api-7erf.onrender.com/api/predict/Shillong')
       setPrediction(res.data)
       localStorage.setItem('teerPrediction', JSON.stringify(res.data))
+      
+      // Deduct the 30 credits and save it
+      const newCredits = credits - COST_PER_RUN;
+      setCredits(newCredits)
+      localStorage.setItem('teerCredits', newCredits)
       
       // Auto-set tomorrow's date for the save box
       const tomorrow = new Date();
       tomorrow.setDate(tomorrow.getDate() + 1);
       setTargetDate(tomorrow.toISOString().split('T')[0]);
       
-      setMessage({ text: '🎯 Prediction Generated!', type: 'success' })
+      setMessage({ text: `🎯 Prediction Generated! (-${COST_PER_RUN} credits)`, type: 'success' })
     } catch (error) {
       setMessage({ text: '❌ Error: Need more history data.', type: 'error' })
     }
@@ -192,7 +213,7 @@ function App() {
     }
     setTimeout(() => setMessage({ text: '', type: '' }), 3000)
   }
-
+  
   if (!isAuthenticated) return <Login pin={pin} setPin={setPin} handleLogin={handleLogin} message={message} />
 
   return (
@@ -212,6 +233,7 @@ function App() {
             handleSubmit={handleSubmit} recentHistory={recentHistory} handleDelete={handleDelete}
             prediction={prediction} runPrediction={runPrediction}
             targetDate={targetDate} setTargetDate={setTargetDate} handleSavePrediction={handleSavePrediction}
+            credits={credits} // NEW: Passing credits down to Dashboard
           />
         ) : activeTab === 'history' ? (
           <HistoryBook 
