@@ -5,7 +5,7 @@ export default function Dashboard({
   handleSubmit, recentHistory, handleDelete, 
   prediction, runPrediction, 
   targetDate, setTargetDate, handleSavePrediction,
-  credits // NEW: Added credits prop
+  credits, alreadyPaidToday // NEW: Added alreadyPaidToday prop
 }) {
   
   const cardStyle = { backgroundColor: 'var(--card-bg)', padding: '1.5rem', borderRadius: '12px', border: '1px solid var(--border-color)' }
@@ -17,14 +17,11 @@ export default function Dashboard({
       return;
     }
     
-    // Grab the numbers from your prediction object
     const baitNumbers = prediction.raw_bait_targets.join(', ');
     const shieldNumbers = prediction.evasion_shields.flatMap(s => s.evasion_hits).join(', ');
     
-    // Format the WhatsApp message nicely with emojis and bold text
     const message = `🎯 *Teer Engine Predictions* 🎯\n*City:* Shillong\n*Date:* ${targetDate}\n\n🔥 *Direct Targets:*\n${baitNumbers}\n\n🛡️ *Backup/Shields:*\n${shieldNumbers}\n\n🍀 Best of Luck!`;
     
-    // Added your specific number with the 91 country code
     const whatsappUrl = `https://wa.me/919707551889?text=${encodeURIComponent(message)}`;
     window.open(whatsappUrl, '_blank');
   };
@@ -86,7 +83,7 @@ export default function Dashboard({
       {/* PREDICTION ENGINE */}
       <div style={cardStyle}>
         
-        {/* NEW: Credit Display */}
+        {/* Credit Display */}
         <div style={{ marginBottom: '1.5rem', padding: '1rem', backgroundColor: 'var(--bg-main)', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
           <div style={{ fontWeight: 'bold', fontSize: '1.1rem', color: credits >= 30 ? 'var(--text-main)' : '#ef4444' }}>
             💳 Credits Remaining: {credits} / 1000
@@ -101,24 +98,24 @@ export default function Dashboard({
             <Shield size={24} color="#8b5cf6"/> Protocol Engine
           </h2>
           
-          {/* UPDATED: Run Button with Credit Check */}
+          {/* UPDATED: Run Button with Once-a-day Free check */}
           <button 
             onClick={runPrediction} 
-            disabled={credits < 30}
+            disabled={!alreadyPaidToday && credits < 30}
             style={{ 
               padding: '0.875rem', 
               width: '100%', 
               maxWidth: '200px', 
-              backgroundColor: credits >= 30 ? '#8b5cf6' : '#888', 
+              backgroundColor: (!alreadyPaidToday && credits < 30) ? '#888' : '#8b5cf6', 
               color: 'white', 
               border: 'none', 
               borderRadius: '6px', 
               fontWeight: 'bold', 
-              cursor: credits >= 30 ? 'pointer' : 'not-allowed', 
-              boxShadow: credits >= 30 ? '0 4px 6px -1px rgba(139, 92, 246, 0.3)' : 'none' 
+              cursor: (!alreadyPaidToday && credits < 30) ? 'not-allowed' : 'pointer', 
+              boxShadow: (!alreadyPaidToday && credits < 30) ? 'none' : '0 4px 6px -1px rgba(139, 92, 246, 0.3)' 
             }}
           >
-            {credits >= 30 ? 'Run Targets' : 'Credits Exhausted'}
+            {alreadyPaidToday ? 'Refresh Targets (Free)' : (!alreadyPaidToday && credits < 30) ? 'Credits Exhausted' : 'Run Targets'}
           </button>
           
           <button 
@@ -140,6 +137,7 @@ export default function Dashboard({
             📱 Share to WhatsApp
           </button>
         </div>
+        
         {prediction ? (
           <div>
             <div style={{ marginBottom: '2.5rem' }}>

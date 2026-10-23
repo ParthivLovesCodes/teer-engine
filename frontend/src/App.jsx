@@ -34,11 +34,18 @@ function App() {
     return saved ? JSON.parse(saved) : null
   })
   
-  // NEW: Credit Tracker State
   const [credits, setCredits] = useState(() => {
     const saved = localStorage.getItem('teerCredits')
     return saved !== null ? parseInt(saved) : 1000
   })
+
+  // NEW: Track when they last paid for a prediction
+  const [lastPredictionDate, setLastPredictionDate] = useState(() => {
+    return localStorage.getItem('teerLastPredictionDate') || ''
+  })
+  
+  const todayString = new Date().toDateString();
+  const alreadyPaidToday = lastPredictionDate === todayString;
 
   const [targetDate, setTargetDate] = useState('')
   const [recentHistory, setRecentHistory] = useState([])
@@ -47,7 +54,6 @@ function App() {
   const [showAllMonths, setShowAllMonths] = useState(false)
   const [analyticsData, setAnalyticsData] = useState(null)
   
-  // State for storing the archived predictions for the History Book highlights
   const [savedPredictions, setSavedPredictions] = useState({})
 
   // Theme Effect
@@ -68,7 +74,6 @@ function App() {
   const fetchFullHistory = async () => {
     setIsHistoryLoading(true)
     try {
-      // Fetch Results
       const res = await axios.get('https://teer-api-7erf.onrender.com/api/history/Shillong?limit=5000')
       const grouped = res.data.reduce((acc, curr) => {
         const monthYear = new Date(curr.result_date).toLocaleString('default', { month: 'long', year: 'numeric' })
@@ -78,7 +83,6 @@ function App() {
       }, {})
       setFullHistory(grouped)
 
-      // Fetch Predictions to highlight the hits
       const predRes = await axios.get('https://teer-api-7erf.onrender.com/api/predictions/Shillong')
       setSavedPredictions(predRes.data)
       
@@ -124,13 +128,12 @@ function App() {
       setMessage({ text: '✅ Result saved successfully!', type: 'success' })
       setFr(''); setSr('');
       
-      // Update data immediately
       fetchRecentHistory()
       fetchFullHistory()
       
       setPrediction(null)
       localStorage.removeItem('teerPrediction')
-      setAnalyticsData(null) // Clears old analytics
+      setAnalyticsData(null)
     } catch (error) {
       setMessage({ text: '❌ Error: ' + (error.response?.data?.detail || error.message), type: 'error' })
     }
@@ -142,26 +145,24 @@ function App() {
     try {
       await axios.delete(`https://teer-api-7erf.onrender.com/api/results/${id}`)
       
-      // Update data immediately
       fetchRecentHistory()
       fetchFullHistory()
       
       setMessage({ text: '🗑️ Result deleted.', type: 'success' })
       setPrediction(null)
       localStorage.removeItem('teerPrediction')
-      setAnalyticsData(null) // Clears old analytics
+      setAnalyticsData(null)
     } catch (error) {
       setMessage({ text: '❌ Error deleting result.', type: 'error' })
     }
     setTimeout(() => setMessage({ text: '', type: '' }), 3000)
   }
 
-  // UPDATED: runPrediction now handles the 30-credit deduction
   const runPrediction = async () => {
-    const COST_PER_RUN = 30; // Deduct 30 credits per click
+    const COST_PER_RUN = 30; 
 
-    // Check if they have enough credits for a run
-    if (credits < COST_PER_RUN) {
+    // Check if they need to pay and if they have enough credits
+    if (!alreadyPaidToday && credits < COST_PER_RUN) {
       setMessage({ text: '❌ Out of credits! Please contact admin to renew.', type: 'error' })
       return
     }
@@ -171,17 +172,23 @@ function App() {
       setPrediction(res.data)
       localStorage.setItem('teerPrediction', JSON.stringify(res.data))
       
-      // Deduct the 30 credits and save it
-      const newCredits = credits - COST_PER_RUN;
-      setCredits(newCredits)
-      localStorage.setItem('teerCredits', newCredits)
-      
-      // Auto-set tomorrow's date for the save box
       const tomorrow = new Date();
       tomorrow.setDate(tomorrow.getDate() + 1);
       setTargetDate(tomorrow.toISOString().split('T')[0]);
       
-      setMessage({ text: `🎯 Prediction Generated! (-${COST_PER_RUN} credits)`, type: 'success' })
+      // Only deduct if they haven't paid today
+      if (!alreadyPaidToday) {
+        const newCredits = credits - COST_PER_RUN;
+        setCredits(newCredits)
+        localStorage.setItem('teerCredits', newCredits)
+        
+        setLastPredictionDate(todayString)
+        localStorage.setItem('teerLastPredictionDate', todayString)
+        
+        setMessage({ text: `🎯 Prediction Generated! (-${COST_PER_RUN} credits)`, type: 'success' })
+      } else {
+        setMessage({ text: `🎯 Prediction Refreshed! (Free today)`, type: 'success' })
+      }
     } catch (error) {
       setMessage({ text: '❌ Error: Need more history data.', type: 'error' })
     }
@@ -192,7 +199,6 @@ function App() {
     e.preventDefault();
     if (!prediction || !targetDate) return;
     
-    // Combine Raw Bait and Evasion Shields into one list
     const allTargets = [
       ...prediction.raw_bait_targets,
       ...prediction.evasion_shields.flatMap(s => s.evasion_hits)
@@ -206,7 +212,6 @@ function App() {
       });
       setMessage({ text: '💾 Prediction Archived for Hit Tracking!', type: 'success' });
       
-      // Refresh history immediately so the Archives tab updates
       fetchFullHistory(); 
     } catch (error) {
       setMessage({ text: '❌ Error saving prediction', type: 'error' });
@@ -233,7 +238,8 @@ function App() {
             handleSubmit={handleSubmit} recentHistory={recentHistory} handleDelete={handleDelete}
             prediction={prediction} runPrediction={runPrediction}
             targetDate={targetDate} setTargetDate={setTargetDate} handleSavePrediction={handleSavePrediction}
-            credits={credits} // NEW: Passing credits down to Dashboard
+            credits={credits} 
+            alreadyPaidToday={alreadyPaidToday} // NEW: Pass the status down
           />
         ) : activeTab === 'history' ? (
           <HistoryBook 
