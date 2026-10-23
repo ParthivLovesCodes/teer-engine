@@ -9,7 +9,23 @@ export default function Dashboard({
   
   const cardStyle = { backgroundColor: 'var(--card-bg)', padding: '1.5rem', borderRadius: '12px', border: '1px solid var(--border-color)' }
   const inputStyle = { width: '100%', padding: '0.875rem', borderRadius: '6px', backgroundColor: 'var(--input-bg)', border: '1px solid var(--border-color)', color: 'var(--text-main)', outline: 'none' }
-
+  const handleWhatsAppShare = () => {
+    if (!prediction || !targetDate) {
+      alert("Please generate a prediction and set a target date first!");
+      return;
+    }
+    
+    // Grab the numbers from your prediction object
+    const baitNumbers = prediction.raw_bait_targets.join(', ');
+    const shieldNumbers = prediction.evasion_shields.flatMap(s => s.evasion_hits).join(', ');
+    
+    // Format the WhatsApp message nicely with emojis and bold text
+    const message = `🎯 *Teer Engine Predictions* 🎯\n*City:* Shillong\n*Date:* ${targetDate}\n\n🔥 *Direct Targets:*\n${baitNumbers}\n\n🛡️ *Backup/Shields:*\n${shieldNumbers}\n\n🍀 Best of Luck!`;
+    
+    // Added your specific number with the 91 country code
+    const whatsappUrl = `https://wa.me/919707551889?text=${encodeURIComponent(message)}`;
+    window.open(whatsappUrl, '_blank');
+  };
   return (
     <div className="dashboard-grid">
       <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
@@ -73,8 +89,25 @@ export default function Dashboard({
           <button onClick={runPrediction} style={{ padding: '0.875rem', width: '100%', maxWidth: '200px', backgroundColor: '#8b5cf6', color: 'white', border: 'none', borderRadius: '6px', fontWeight: 'bold', cursor: 'pointer', boxShadow: '0 4px 6px -1px rgba(139, 92, 246, 0.3)' }}>
             Run Targets
           </button>
+          <button 
+                onClick={handleWhatsAppShare}
+                style={{
+                  backgroundColor: '#25D366', // WhatsApp Green
+                  color: 'white',
+                  border: 'none',
+                  padding: '0.5rem 1rem',
+                  borderRadius: '8px',
+                  cursor: 'pointer',
+                  fontWeight: 'bold',
+                  marginLeft: '10px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '5px'
+                }}
+              >
+                📱 Share to WhatsApp
+            </button>
         </div>
-
         {prediction ? (
           <div>
             <div style={{ marginBottom: '2.5rem' }}>
