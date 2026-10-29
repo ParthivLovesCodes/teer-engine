@@ -6,9 +6,9 @@ from datetime import date, timedelta
 from fastapi.middleware.cors import CORSMiddleware
 import pandas as pd
 from collections import Counter
-# --- 1. DATABASE SETUP ---
-SQLALCHEMY_DATABASE_URL = "sqlite:///./teer_data.db"
-engine = create_engine(SQLALCHEMY_DATABASE_URL, connect_args={"check_same_thread": False})
+
+SQLALCHEMY_DATABASE_URL = "postgresql://your_actual_render_user:your_password@hostname/dbname"
+engine = create_engine(SQLALCHEMY_DATABASE_URL)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
 
